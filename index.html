@@ -1,0 +1,877 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>PULSE — Sound Redefined</title>
+<meta name="description" content="PULSE premium wireless headphones. Precision engineering, AI-powered noise cancellation. Experience pure audio. $349." />
+
+<!-- Tailwind CSS CDN -->
+<script src="https://cdn.tailwindcss.com"></script>
+
+<!-- GSAP + ScrollTrigger CDN -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+
+<!-- Inter typeface -->
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        fontFamily: { sans: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'] },
+        colors: { ink: '#0d0d0d', coal: '#0a0a0a' },
+      },
+    },
+  };
+</script>
+
+<style>
+  /* ============================================================
+     THEME + WATERMARK-KILL VARIABLES
+     Scaling from center pushes ALL corners off-screen; the extra
+     down-right translate biases the crop so the bottom-right
+     watermark corner is pushed furthest out while the headphones
+     stay perfectly centered.
+  ============================================================ */
+  :root {
+    --wm-scale: 1.18;
+    --wm-shift-x: 2%;
+    --wm-shift-y: 2%;
+    --ignite: 0 0 24px rgba(255,255,255,.55), 0 0 72px rgba(255,255,255,.22);
+  }
+
+  html { scroll-behavior: auto; }
+
+  html, body {
+    background: #0d0d0d;
+    color: #f5f5f5;
+    overflow-x: hidden;                  /* never allow horizontal scrollbars */
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  ::selection { background: rgba(255,255,255,.15); }
+
+  @media (pointer: fine) { body, a, button, input, label { cursor: none; } }
+
+  /* ============================================================
+     FIXED FULL-SCREEN VIDEO STAGE (watermark clipped by overflow)
+  ============================================================ */
+  .video-stage {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100vw;
+    height: 100vh;
+    height: 100dvh;                      /* mobile browser chrome safe */
+    overflow: hidden;                    /* clips the over-scaled edges */
+    z-index: 0;
+    background: #0d0d0d;
+    pointer-events: none;
+  }
+  .video-stage video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;                   /* center-crop on any aspect */
+    transform: scale(var(--wm-scale)) translate(var(--wm-shift-x), var(--wm-shift-y));
+    transform-origin: center center;
+    will-change: transform;
+  }
+
+  /* Portrait: object-fit already crops the sides hard, but the bottom
+     edge still touches the viewport — push harder downward so the
+     watermark can never bleed back into view. */
+  @media (max-aspect-ratio: 3/4) {
+    :root { --wm-scale: 1.26; --wm-shift-x: 3%; --wm-shift-y: 4.5%; }
+  }
+
+  /* Insurance layer: soft dark radial welded over the bottom-right
+     corner for extreme viewport ratios. */
+  .corner-shield {
+    position: fixed; right: 0; bottom: 0;
+    width: 34vmin; height: 26vmin;
+    z-index: 1; pointer-events: none;
+    background: radial-gradient(120% 120% at 100% 100%,
+      rgba(13,13,13,.95) 0%, rgba(13,13,13,.75) 45%, rgba(13,13,13,0) 75%);
+  }
+
+  .vignette {
+    position: fixed; inset: 0; z-index: 1; pointer-events: none;
+    background:
+      radial-gradient(130% 100% at 50% 50%, transparent 55%, rgba(0,0,0,.55) 100%),
+      linear-gradient(to bottom, rgba(13,13,13,.35) 0%, transparent 18%, transparent 82%, rgba(13,13,13,.5) 100%);
+  }
+
+  /* ============================================================
+     GLASS SURFACES
+  ============================================================ */
+  .glass-card {
+    background: rgba(255,255,255,.045);
+    -webkit-backdrop-filter: blur(22px) saturate(140%);
+    backdrop-filter: blur(22px) saturate(140%);
+    border: 1px solid rgba(255,255,255,.09);
+    border-radius: 1.5rem;
+    box-shadow: 0 24px 60px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.08);
+  }
+  .glass-bar {
+    background: rgba(13,13,13,.55);
+    -webkit-backdrop-filter: blur(18px) saturate(140%);
+    backdrop-filter: blur(18px) saturate(140%);
+    border-bottom: 1px solid rgba(255,255,255,.06);
+  }
+  .eyebrow {
+    font-size: .7rem; font-weight: 600;
+    letter-spacing: .28em; text-transform: uppercase;
+    color: rgba(255,255,255,.45);
+  }
+  .nav-link {
+    font-size: .72rem; font-weight: 500;
+    letter-spacing: .18em; text-transform: uppercase;
+    color: rgba(255,255,255,.55);
+    transition: color .3s ease, text-shadow .3s ease;
+  }
+  .nav-link:hover { color: #fff; text-shadow: 0 0 12px rgba(255,255,255,.5); }
+
+  /* ============================================================
+     FUTURISTIC VERTICAL PROGRESS DASHBOARD (desktop only)
+  ============================================================ */
+  #tracker {
+    position: fixed; z-index: 40;
+    left: 3rem; top: 50%;
+    transform: translateY(-50%);
+  }
+  .t-rail { position: relative; width: 2px; height: 44vh; background: rgba(255,255,255,.10); }
+  .t-fill {
+    position: absolute; inset: 0;
+    background: linear-gradient(to bottom, rgba(255,255,255,.9), #fff);
+    box-shadow: 0 0 12px rgba(255,255,255,.7);
+    transform: scaleY(var(--p, 0));
+    transform-origin: center top;
+    will-change: transform;
+  }
+  .t-stop {
+    position: absolute; left: 0;
+    transform: translate(calc(-50% + 1px), -50%);
+    display: flex; align-items: center; gap: .65rem;
+    background: none; border: 0; padding: .4rem; margin: -.4rem;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .t-dot {
+    width: 7px; height: 7px; border-radius: 9999px; flex: none;
+    background: rgba(255,255,255,.25);
+    transition: background .4s ease, box-shadow .4s ease, transform .4s ease;
+  }
+  .t-text {
+    font-size: .62rem; font-weight: 600;
+    letter-spacing: .22em; text-transform: uppercase;
+    color: rgba(255,255,255,.30); white-space: nowrap;
+    transition: color .4s ease, text-shadow .4s ease;
+  }
+  .t-stop.active .t-dot  { background: #fff; box-shadow: 0 0 14px rgba(255,255,255,.9); transform: scale(1.45); }
+  .t-stop.active .t-text { color: #fff; text-shadow: 0 0 14px rgba(255,255,255,.65); }
+
+  /* ============================================================
+     BUTTONS
+  ============================================================ */
+  .btn-glow {
+    position: relative; isolation: isolate;
+    background: #f5f5f5; color: #0d0d0d;
+    transition: box-shadow .35s ease;
+    box-shadow: 0 0 24px rgba(255,255,255,.18), 0 0 80px rgba(255,255,255,.08);
+    will-change: transform;
+  }
+  .btn-glow:hover { box-shadow: 0 0 40px rgba(255,255,255,.35), 0 0 120px rgba(255,255,255,.14); }
+  .btn-glow::after {
+    content: ''; position: absolute; inset: -2px; border-radius: inherit; z-index: -1;
+    background: conic-gradient(from 180deg, transparent, rgba(255,255,255,.5), transparent 40%);
+    filter: blur(10px); opacity: .6;
+    animation: spinGlow 4s linear infinite;
+  }
+  @keyframes spinGlow { to { transform: rotate(360deg); } }
+
+  .btn-pill {
+    background: rgba(255,255,255,.08);
+    border: 1px solid rgba(255,255,255,.18);
+    transition: background .3s ease, box-shadow .3s ease, border-color .3s ease;
+  }
+  .btn-pill:hover {
+    background: rgba(255,255,255,.16);
+    border-color: rgba(255,255,255,.4);
+    box-shadow: 0 0 20px rgba(255,255,255,.15);
+  }
+
+  /* ============================================================
+     BREATHING SCROLL INDICATOR
+  ============================================================ */
+  @keyframes breatheDown {
+    0%, 100% { transform: translateY(0) scale(1); opacity: .9; }
+    50%      { transform: translateY(10px) scale(.92); opacity: .35; }
+  }
+  .scroll-cue { animation: breatheDown 2.2s cubic-bezier(.45,0,.55,1) infinite; }
+
+  /* ============================================================
+     CUSTOM MAGNETIC CURSOR (fine pointers only)
+  ============================================================ */
+  #cursor-dot, #cursor-ring {
+    position: fixed; top: 0; left: 0;
+    z-index: 999999;                     /* absolute top — above modal (z-95) & loader (z-100) */
+    pointer-events: none; border-radius: 9999px;
+    mix-blend-mode: difference; display: none;
+  }
+  #cursor-dot  { width: 8px; height: 8px; background: #fff; }
+  #cursor-ring { width: 38px; height: 38px; border: 1px solid rgba(255,255,255,.65); }
+  @media (pointer: fine) { #cursor-dot, #cursor-ring { display: block; } }
+
+  /* ============================================================
+     CHECKOUT / FORM ELEMENTS
+  ============================================================ */
+  .field {
+    width: 100%;
+    background: rgba(255,255,255,.05);
+    border: 1px solid rgba(255,255,255,.10);
+    border-radius: .9rem;
+    padding: .85rem 1.1rem;
+    font-size: .875rem; font-weight: 300;
+    color: #f5f5f5;
+    outline: none;
+    transition: border-color .3s ease, box-shadow .3s ease, background .3s ease;
+  }
+  .field::placeholder { color: rgba(255,255,255,.28); }
+  .field:focus {
+    border-color: rgba(255,255,255,.45);
+    background: rgba(255,255,255,.07);
+    box-shadow: 0 0 0 3px rgba(255,255,255,.07), 0 0 24px rgba(255,255,255,.08);
+  }
+  .field-label {
+    display: block; margin-bottom: .45rem;
+    font-size: .64rem; font-weight: 600;
+    letter-spacing: .2em; text-transform: uppercase;
+    color: rgba(255,255,255,.4);
+  }
+
+  .color-dot {
+    width: 2.4rem; height: 2.4rem; border-radius: 9999px;
+    border: 2px solid transparent;
+    outline: 1px solid rgba(255,255,255,.15);
+    outline-offset: 3px;
+    transition: transform .3s ease, outline-color .3s ease, box-shadow .3s ease;
+  }
+  .color-dot:hover { transform: scale(1.12); }
+  .color-dot.selected {
+    outline-color: rgba(255,255,255,.9);
+    transform: scale(1.12);
+    box-shadow: 0 0 18px rgba(255,255,255,.25);
+  }
+
+  .spec-tile {
+    background: rgba(255,255,255,.035);
+    border: 1px solid rgba(255,255,255,.08);
+    border-radius: 1.1rem;
+    transition: border-color .35s ease, background .35s ease, transform .35s ease;
+  }
+  .spec-tile:hover {
+    border-color: rgba(255,255,255,.22);
+    background: rgba(255,255,255,.06);
+    transform: translateY(-3px);
+  }
+
+  /* Overlay steps hidden until GSAP takes over */
+  .overlay-step { opacity: 0; visibility: hidden; }
+
+  /* Loader */
+  #loader { transition: opacity .6s ease; }
+  @keyframes pulse-ring {
+    0% { transform: scale(.85); opacity: .9; }
+    70% { transform: scale(1.15); opacity: .2; }
+    100% { transform: scale(.85); opacity: .9; }
+  }
+  .loader-dot { animation: pulse-ring 1.4s ease-in-out infinite; }
+
+  /* Success modal */
+  #successModal { transition: opacity .4s ease; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .scroll-cue, .btn-glow::after, .loader-dot { animation: none; }
+  }
+</style>
+</head>
+
+<body class="font-sans bg-ink text-neutral-100 selection:bg-white/20">
+
+<!-- LOADER -->
+<div id="loader" class="fixed inset-0 z-[100] bg-[#0d0d0d] flex flex-col items-center justify-center gap-6">
+  <div class="loader-dot w-3 h-3 rounded-full bg-white/80"></div>
+  <p class="eyebrow">Loading Experience</p>
+</div>
+
+<!-- FIXED VIDEO STAGE — watermark clipped out of view -->
+<div class="video-stage" aria-hidden="true">
+  <video id="scrubVideo" src="video.mp4" muted playsinline preload="auto"></video>
+</div>
+<div class="vignette" aria-hidden="true"></div>
+<div class="corner-shield" aria-hidden="true"></div>
+
+<!-- STICKY TRANSLUCENT NAV -->
+<header class="glass-bar fixed top-0 inset-x-0 z-50 flex items-center justify-between px-6 md:px-12 py-4">
+  <a href="#" data-goto="0" class="text-sm font-extrabold tracking-[.4em] uppercase">Pulse</a>
+  <nav class="hidden lg:flex items-center gap-10" aria-label="Primary">
+    <a href="#" data-goto="0" class="nav-link">Overview</a>
+    <a href="#" data-goto="1" class="nav-link">Acoustics</a>
+    <a href="#" data-goto="2" class="nav-link">Intelligence</a>
+    <a href="#" data-goto="3" class="nav-link">Acquire</a>
+  </nav>
+  <a href="#" data-goto="3" class="btn-pill rounded-full px-6 py-2.5 text-[.68rem] font-semibold tracking-[.2em] uppercase">
+    Order Now
+  </a>
+</header>
+
+<!-- FUTURISTIC PROGRESS DASHBOARD (desktop only) -->
+<nav id="tracker" class="hidden md:block" aria-label="Section progress">
+  <div class="t-rail">
+    <div class="t-fill" aria-hidden="true"></div>
+    <button class="t-stop" data-goto="0" style="top: 0%"   aria-label="Overview">
+      <span class="t-dot"></span><span class="t-text">01&nbsp;//&nbsp;Overview</span>
+    </button>
+    <button class="t-stop" data-goto="1" style="top: 37%"  aria-label="Acoustics">
+      <span class="t-dot"></span><span class="t-text">02&nbsp;//&nbsp;Acoustics</span>
+    </button>
+    <button class="t-stop" data-goto="2" style="top: 68%"  aria-label="Intelligence">
+      <span class="t-dot"></span><span class="t-text">03&nbsp;//&nbsp;Intelligence</span>
+    </button>
+    <button class="t-stop" data-goto="3" style="top: 100%" aria-label="Acquire">
+      <span class="t-dot"></span><span class="t-text">04&nbsp;//&nbsp;Acquire</span>
+    </button>
+  </div>
+</nav>
+
+<!-- SCROLL TRACK — 4 × 100vh of scrub distance drives the video -->
+<main id="scrollTrack" class="relative z-10" style="height: 400vh;"></main>
+
+<!-- ============ FIXED OVERLAY STEPS (GSAP-driven) ============ -->
+
+<!-- 01 OVERVIEW / HERO -->
+<section id="step-0" class="overlay-step fixed inset-0 z-20 flex flex-col items-center justify-center text-center px-6 pointer-events-none">
+  <p class="eyebrow mb-5">Pulse One · Wireless</p>
+  <h1 data-ignite class="text-5xl sm:text-7xl md:text-8xl font-extrabold tracking-tight leading-[.95]">
+    SOUND<br class="sm:hidden" /> REDEFINED
+  </h1>
+  <p class="mt-6 max-w-md text-sm sm:text-base font-light text-white/60 leading-relaxed">
+    Engineered silence. Uncompromising acoustics. Crafted for those who hear the difference.
+  </p>
+  <div class="absolute bottom-10 inset-x-0 flex flex-col items-center gap-3">
+    <span class="eyebrow">Scroll to Explore</span>
+    <svg class="scroll-cue w-5 h-5 text-white/70" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+    </svg>
+  </div>
+</section>
+
+<!-- 02 ACOUSTICS — card on the RIGHT -->
+<section id="step-1" class="overlay-step fixed inset-0 z-20 flex items-center justify-center md:justify-end px-6 md:px-20 pointer-events-none">
+  <div class="glass-card max-w-sm md:max-w-md p-8 md:p-10">
+    <p class="eyebrow mb-4">02 — Acoustics</p>
+    <h2 data-ignite class="text-2xl md:text-4xl font-bold tracking-tight mb-4">Precision Engineering</h2>
+    <p class="text-sm md:text-base font-light text-white/65 leading-relaxed">
+      Custom-designed audio drivers and high-density copper voice coils, machined to
+      micron tolerances for a soundstage of absolute clarity.
+    </p>
+  </div>
+</section>
+
+<!-- 03 INTELLIGENCE — card on the LEFT -->
+<section id="step-2" class="overlay-step fixed inset-0 z-20 flex items-center justify-center md:justify-start px-6 md:pl-32 md:pr-20 pointer-events-none">
+  <div class="glass-card max-w-sm md:max-w-md p-8 md:p-10">
+    <p class="eyebrow mb-4">03 — Intelligence</p>
+    <h2 data-ignite class="text-2xl md:text-4xl font-bold tracking-tight mb-4">Pure Silence. Realized.</h2>
+    <p class="text-sm md:text-base font-light text-white/65 leading-relaxed">
+      Advanced AI-powered neural microchips process external audio in real-time
+      for instant, total isolation — forty thousand times per second.
+    </p>
+  </div>
+</section>
+
+<!-- ==========================================================
+     04 ACQUIRE — FULL CHECKOUT PAGE (normal document flow;
+     solid background slides over the fixed video stage)
+=========================================================== -->
+<section id="checkout" class="relative z-30 bg-coal border-t border-white/5">
+  <div class="max-w-6xl mx-auto px-6 md:px-10 lg:pl-24 xl:pl-10 py-24 md:py-32">
+
+    <header class="text-center mb-16 md:mb-20">
+      <p class="eyebrow mb-4">04 — Acquire</p>
+      <h2 data-ignite-late class="text-4xl sm:text-6xl font-extrabold tracking-tight">Experience Pure Audio.</h2>
+      <p class="mt-4 text-2xl sm:text-3xl font-light text-white/70">$349</p>
+    </header>
+
+    <div class="grid lg:grid-cols-2 gap-10 lg:gap-16 items-start">
+
+      <!-- LEFT · SPECS MATRIX -->
+      <div>
+        <h3 class="text-lg font-semibold tracking-tight mb-6 text-white/85">Engineered without compromise</h3>
+        <div class="grid grid-cols-2 gap-4">
+          <div class="spec-tile p-6">
+            <p class="text-3xl font-extrabold tracking-tight">60H</p>
+            <p class="mt-2 text-[.68rem] tracking-[.18em] uppercase text-white/40">Battery Life</p>
+          </div>
+          <div class="spec-tile p-6">
+            <p class="text-3xl font-extrabold tracking-tight">45dB</p>
+            <p class="mt-2 text-[.68rem] tracking-[.18em] uppercase text-white/40">Max ANC Depth</p>
+          </div>
+          <div class="spec-tile p-6">
+            <p class="text-3xl font-extrabold tracking-tight">Hi-Res</p>
+            <p class="mt-2 text-[.68rem] tracking-[.18em] uppercase text-white/40">Lossless Audio</p>
+          </div>
+          <div class="spec-tile p-6">
+            <p class="text-3xl font-extrabold tracking-tight">250g</p>
+            <p class="mt-2 text-[.68rem] tracking-[.18em] uppercase text-white/40">Featherweight Build</p>
+          </div>
+        </div>
+        <ul class="mt-8 space-y-3 text-sm font-light text-white/55 leading-relaxed">
+          <li class="flex gap-3"><span class="text-white/30">—</span> Adaptive spatial audio with dynamic head tracking</li>
+          <li class="flex gap-3"><span class="text-white/30">—</span> Neural transparency mode with voice isolation</li>
+          <li class="flex gap-3"><span class="text-white/30">—</span> Bluetooth 5.4 · multipoint · USB-C lossless wired mode</li>
+          <li class="flex gap-3"><span class="text-white/30">—</span> Free shipping · 60-day trial · 2-year warranty</li>
+        </ul>
+      </div>
+
+      <!-- RIGHT · CHECKOUT CONFIGURATOR -->
+      <div class="glass-card p-8 md:p-10">
+        <p class="eyebrow mb-6">Pre-Order Configurator</p>
+
+        <!-- Color selection -->
+        <div class="mb-8">
+          <span class="field-label">Finish — <span id="colorLabel" class="text-white/85 normal-case tracking-normal font-medium">Space Gray</span></span>
+          <div class="flex items-center gap-5 mt-3" role="radiogroup" aria-label="Color">
+            <button type="button" class="color-dot selected" data-color="Space Gray"    style="background:#3a3a3c" aria-label="Space Gray"></button>
+            <button type="button" class="color-dot" data-color="Lunar Silver"  style="background:#d8d8dc" aria-label="Lunar Silver"></button>
+            <button type="button" class="color-dot" data-color="Copper Bronze" style="background:#b07d54" aria-label="Copper Bronze"></button>
+          </div>
+        </div>
+
+        <!-- Order form -->
+        <form id="orderForm" novalidate>
+          <div class="space-y-5">
+            <div>
+              <label class="field-label" for="fullName">Full Name</label>
+              <input class="field" id="fullName" name="fullName" type="text" placeholder="Egemen Al" autocomplete="name" required />
+            </div>
+            <div>
+              <label class="field-label" for="email">Email</label>
+              <input class="field" id="email" name="email" type="email" placeholder="you@example.com" autocomplete="email" required />
+            </div>
+            <div>
+              <label class="field-label" for="cardNumber">Card Number</label>
+              <input class="field" id="cardNumber" name="cardNumber" type="text" inputmode="numeric" placeholder="1234 5678 9012 3456" autocomplete="cc-number" maxlength="19" required />
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label class="field-label" for="expiry">Expiry</label>
+                <input class="field" id="expiry" name="expiry" type="text" inputmode="numeric" placeholder="MM/YY" autocomplete="cc-exp" maxlength="5" required />
+              </div>
+              <div>
+                <label class="field-label" for="cvc">CVC</label>
+                <input class="field" id="cvc" name="cvc" type="text" inputmode="numeric" placeholder="123" autocomplete="cc-csc" maxlength="4" required />
+              </div>
+            </div>
+          </div>
+
+          <div class="mt-8 flex items-center justify-between text-sm text-white/60">
+            <span>Pulse One · <span id="summaryColor">Space Gray</span></span>
+            <span class="text-white font-semibold">$349</span>
+          </div>
+
+          <button type="submit" data-magnetic class="btn-glow w-full mt-6 rounded-full px-12 py-4 text-sm font-semibold tracking-[.2em] uppercase">
+            Complete Pre-Order
+          </button>
+          <p id="formError" class="hidden mt-4 text-center text-xs tracking-wide text-red-300/80"></p>
+          <p class="mt-5 text-center text-[10px] tracking-[.18em] uppercase text-white/25">Demo checkout — no payment is processed</p>
+        </form>
+      </div>
+    </div>
+
+    <footer class="mt-24 pt-10 border-t border-white/5 text-center space-y-3">
+      <p class="text-[11px] tracking-[.3em] uppercase text-white/30">Pulse Audio — Sound Redefined</p>
+      <p class="text-[10.5px] tracking-[.14em] uppercase text-white/40 leading-relaxed max-w-2xl mx-auto">
+        © 2026 · All rights reserved. All production concepts and design patents are the
+        exclusive property of
+        <a href="https://github.com/Egemen-Al" target="_blank" rel="noopener noreferrer"
+           class="text-white/75 font-medium transition-all duration-300 hover:text-white hover:underline underline-offset-4 decoration-white/30 hover:[text-shadow:0_0_14px_rgba(255,255,255,.4)]">Bülent Egemen AL</a>.
+      </p>
+    </footer>
+  </div>
+</section>
+
+<!-- SUCCESS CONFIRMATION MODAL -->
+<div id="successModal" class="hidden opacity-0 fixed inset-0 z-[95] flex items-center justify-center px-6 bg-black/70 backdrop-blur-md">
+  <div class="glass-card max-w-md w-full p-10 text-center">
+    <div class="mx-auto mb-6 w-16 h-16 rounded-full border border-white/25 flex items-center justify-center" style="box-shadow: 0 0 40px rgba(255,255,255,.2)">
+      <svg class="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+      </svg>
+    </div>
+    <p class="eyebrow mb-3">Pre-Order Confirmed</p>
+    <h3 class="text-2xl font-bold tracking-tight mb-3">Welcome to Pulse.</h3>
+    <p id="successText" class="text-sm font-light text-white/60 leading-relaxed"></p>
+    <button id="successClose" class="btn-pill mt-8 rounded-full px-10 py-3 text-[.68rem] font-semibold tracking-[.2em] uppercase">
+      Continue
+    </button>
+  </div>
+</div>
+
+<!-- CUSTOM CURSOR -->
+<div id="cursor-ring" aria-hidden="true"></div>
+<div id="cursor-dot" aria-hidden="true"></div>
+
+<!-- ==========================================================
+     SCRIPT — modular scrollytelling + checkout engine
+=========================================================== -->
+<script>
+(() => {
+  'use strict';
+  gsap.registerPlugin(ScrollTrigger);
+
+  const $  = (s, c = document) => c.querySelector(s);
+  const $$ = (s, c = document) => [...c.querySelectorAll(s)];
+
+  const video    = $('#scrubVideo');
+  const track    = $('#scrollTrack');
+  const loader   = $('#loader');
+  const checkout = $('#checkout');
+
+  /* Section map — single source of truth for the video track.
+     enter/exit: slice of the scrub distance. snap: magnetic lock
+     point (the exact frame where components sit perfectly). */
+  const SECTIONS = [
+    { id: '#step-0', enter: 0.00, exit: 0.30, snap: 0.00 },
+    { id: '#step-1', enter: 0.34, exit: 0.62, snap: 0.47 },
+    { id: '#step-2', enter: 0.66, exit: 0.94, snap: 0.81 },
+  ];
+  const SNAPS  = [...SECTIONS.map(s => s.snap), 1];
+  const trackH = () => track.offsetHeight - window.innerHeight;
+
+  const IGNITE_ON  = '0 0 24px rgba(255,255,255,.55), 0 0 72px rgba(255,255,255,.22)';
+  const IGNITE_OFF = '0 0 0px rgba(255,255,255,0), 0 0 0px rgba(255,255,255,0)';
+
+  /* ----------------------------------------------------------
+     1 · VIDEO PRELOAD — fetch as Blob so every frame is buffered
+         locally; currentTime seeks then resolve instantly, which
+         is what makes the scrub liquid-smooth.
+  ---------------------------------------------------------- */
+  const loadVideo = async (src) => {
+    try {
+      const res = await fetch(src);
+      if (!res.ok) throw new Error(res.status);
+      video.src = URL.createObjectURL(await res.blob());
+    } catch { /* fall back to streaming src from markup */ }
+    await new Promise((resolve) => {
+      if (video.readyState >= 2) return resolve();
+      video.addEventListener('loadeddata', resolve, { once: true });
+      video.load();
+    });
+    if (!video.duration) {
+      await new Promise((r) => video.addEventListener('loadedmetadata', r, { once: true }));
+    }
+  };
+
+  /* iOS unlock: silent play/pause inside first gesture grants seeking */
+  const unlock = () => { video.play().then(() => video.pause()).catch(() => {}); };
+  window.addEventListener('touchstart', unlock, { once: true, passive: true });
+  window.addEventListener('pointerdown', unlock, { once: true, passive: true });
+
+  /* ----------------------------------------------------------
+     2 · SCRUB ENGINE + MAGNETIC SNAP
+         Master trigger scrubs video.currentTime with luxury
+         damping (scrub: 1.2) and snaps to each section's frame.
+  ---------------------------------------------------------- */
+  let masterST = null;
+
+  const initScrub = () => {
+    const duration = video.duration || 10;
+    const proxy = { t: 0 };
+    let lastT = -1;
+
+    const tween = gsap.to(proxy, {
+      t: duration,
+      ease: 'none',
+      scrollTrigger: {
+        trigger: track,
+        start: 'top top',
+        end: 'bottom bottom',
+        scrub: 1.2,                          // luxury damping
+        invalidateOnRefresh: true,
+        snap: {
+          snapTo: SNAPS,
+          duration: { min: 0.35, max: 0.9 },
+          delay: 0.12,
+          ease: 'power2.inOut',
+          directional: true,
+        },
+      },
+      onUpdate: () => {
+        if (Math.abs(proxy.t - lastT) < 0.02) return;   // skip sub-frame seeks
+        lastT = proxy.t;
+        if (video.readyState >= 2) video.currentTime = proxy.t;
+      },
+    });
+    masterST = tween.scrollTrigger;
+  };
+
+  /* ----------------------------------------------------------
+     3 · PROGRESS DASHBOARD — fill spans the WHOLE page (video
+         track + checkout); milestone 04 activates on checkout.
+  ---------------------------------------------------------- */
+  const initTracker = () => {
+    const rail    = $('.t-rail');
+    const stops   = $$('.t-stop');
+    const setFill = gsap.quickSetter(rail, '--p');
+    let activeIdx = -1;
+
+    ScrollTrigger.create({
+      trigger: document.body,
+      start: 'top top',
+      end: 'bottom bottom',
+      onUpdate: (self) => {
+        setFill(self.progress);
+
+        let idx;
+        if (checkout.getBoundingClientRect().top < window.innerHeight * 0.6) {
+          idx = 3;
+        } else {
+          const p = masterST ? masterST.progress : 0;
+          idx = 0;
+          for (let i = SECTIONS.length - 1; i >= 0; i--) {
+            if (p >= SECTIONS[i].enter - 0.02) { idx = i; break; }
+          }
+        }
+        if (idx !== activeIdx) {
+          activeIdx = idx;
+          stops.forEach((s, i) => s.classList.toggle('active', i === idx));
+        }
+      },
+    });
+
+    /* Milestones + nav links glide to their target */
+    $$('[data-goto]').forEach((el) => {
+      el.addEventListener('click', (e) => {
+        e.preventDefault();
+        const i = +el.dataset.goto;
+        if (i === 3) {
+          checkout.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        } else {
+          window.scrollTo({ top: trackH() * SECTIONS[i].snap, behavior: 'smooth' });
+        }
+      });
+    });
+  };
+
+  /* ----------------------------------------------------------
+     4 · OVERLAYS — scrub-linked reveal + neon text ignite,
+         strictly bound to scroll coordinates.
+  ---------------------------------------------------------- */
+  const initOverlays = () => {
+    SECTIONS.forEach(({ id, enter, exit }) => {
+      const node   = $(id);
+      const ignite = $('[data-ignite]', node);
+      gsap.set(node, { visibility: 'visible', opacity: enter === 0 ? 1 : 0 });
+      gsap.set(ignite, { textShadow: enter === 0 ? IGNITE_ON : IGNITE_OFF });
+
+      const tl = gsap.timeline({
+        scrollTrigger: {
+          trigger: track,
+          start: () => trackH() * enter + ' top',
+          end:   () => trackH() * exit  + ' top',
+          scrub: 0.6,
+          invalidateOnRefresh: true,
+        },
+      });
+
+      if (enter > 0) {
+        tl.fromTo(node,
+          { opacity: 0, y: 48, filter: 'blur(6px)' },
+          { opacity: 1, y: 0, filter: 'blur(0px)', duration: 0.3, ease: 'power2.out' })
+          .to(ignite, { textShadow: IGNITE_ON, duration: 0.18, ease: 'power1.in' }, '-=0.12');
+      } else {
+        tl.set(node, { opacity: 1, y: 0 });
+      }
+
+      tl.to(node, { opacity: 1, duration: 0.3 });                        // hold
+      tl.to(ignite, { textShadow: IGNITE_OFF, duration: 0.12, ease: 'power1.out' })
+        .to(node, { opacity: 0, y: -40, filter: 'blur(6px)', duration: 0.25, ease: 'power2.in' }, '<');
+    });
+
+    /* Hero ignite on load (one-shot) */
+    gsap.fromTo('#step-0 [data-ignite]',
+      { textShadow: IGNITE_OFF }, { textShadow: IGNITE_ON, duration: 1.6, ease: 'power2.out', delay: .3 });
+
+    /* Checkout headline ignition as it scrolls into view */
+    gsap.fromTo('[data-ignite-late]',
+      { textShadow: IGNITE_OFF, opacity: 0, y: 40 },
+      {
+        textShadow: IGNITE_ON, opacity: 1, y: 0, ease: 'power2.out',
+        scrollTrigger: { trigger: checkout, start: 'top 75%', end: 'top 30%', scrub: 0.6 },
+      });
+  };
+
+  /* ----------------------------------------------------------
+     5 · PREMIUM CURSOR SYSTEM (fine pointers only)
+  ---------------------------------------------------------- */
+  const initCursor = () => {
+    if (!window.matchMedia('(pointer: fine)').matches) return;
+
+    const dot  = $('#cursor-dot');
+    const ring = $('#cursor-ring');
+    gsap.set([dot, ring], { xPercent: -50, yPercent: -50, x: -100, y: -100 });
+
+    const dotX  = gsap.quickTo(dot,  'x', { duration: 0.12, ease: 'power2.out' });
+    const dotY  = gsap.quickTo(dot,  'y', { duration: 0.12, ease: 'power2.out' });
+    const ringX = gsap.quickTo(ring, 'x', { duration: 0.45, ease: 'power3.out' });
+    const ringY = gsap.quickTo(ring, 'y', { duration: 0.45, ease: 'power3.out' });
+
+    window.addEventListener('mousemove', (e) => {
+      dotX(e.clientX); dotY(e.clientY);
+      ringX(e.clientX); ringY(e.clientY);
+    }, { passive: true });
+
+    const HOVER = 'a, button, input, label, [data-magnetic], .t-stop, .color-dot';
+    document.addEventListener('mouseover', (e) => {
+      if (e.target.closest(HOVER)) {
+        gsap.to(ring, { scale: 2.1, duration: .35, ease: 'power3.out' });
+        gsap.to(dot,  { scale: .5, duration: .35 });
+      }
+    });
+    document.addEventListener('mouseout', (e) => {
+      if (e.target.closest(HOVER)) {
+        gsap.to(ring, { scale: 1, duration: .35, ease: 'power3.out' });
+        gsap.to(dot,  { scale: 1, duration: .35 });
+      }
+    });
+
+    /* Magnetic pull on tagged elements */
+    $$('[data-magnetic]').forEach((el) => {
+      const pull = 0.3;
+      el.addEventListener('mousemove', (e) => {
+        const r = el.getBoundingClientRect();
+        gsap.to(el, {
+          x: (e.clientX - (r.left + r.width / 2)) * pull,
+          y: (e.clientY - (r.top + r.height / 2)) * pull,
+          duration: 0.4, ease: 'power3.out',
+        });
+      });
+      el.addEventListener('mouseleave', () => {
+        gsap.to(el, { x: 0, y: 0, duration: 0.7, ease: 'elastic.out(1, 0.4)' });
+      });
+    });
+  };
+
+  /* ----------------------------------------------------------
+     6 · CHECKOUT — color configurator, input masks, submit
+         interceptor with success confirmation.
+  ---------------------------------------------------------- */
+  const initCheckout = () => {
+    let selectedColor = 'Space Gray';
+    const colorLabel   = $('#colorLabel');
+    const summaryColor = $('#summaryColor');
+
+    $$('.color-dot').forEach((dotBtn) => {
+      dotBtn.addEventListener('click', () => {
+        $$('.color-dot').forEach((d) => d.classList.remove('selected'));
+        dotBtn.classList.add('selected');
+        selectedColor = dotBtn.dataset.color;
+        colorLabel.textContent   = selectedColor;
+        summaryColor.textContent = selectedColor;
+        gsap.fromTo(colorLabel, { opacity: 0, y: 4 }, { opacity: 1, y: 0, duration: .4, ease: 'power2.out' });
+      });
+    });
+
+    /* Input masks */
+    const digits = (v) => v.replace(/\D/g, '');
+    $('#cardNumber').addEventListener('input', (e) => {
+      e.target.value = digits(e.target.value).slice(0, 16).replace(/(.{4})/g, '$1 ').trim();
+    });
+    $('#expiry').addEventListener('input', (e) => {
+      const d = digits(e.target.value).slice(0, 4);
+      e.target.value = d.length > 2 ? d.slice(0, 2) + '/' + d.slice(2) : d;
+    });
+    $('#cvc').addEventListener('input', (e) => {
+      e.target.value = digits(e.target.value).slice(0, 4);
+    });
+
+    /* Submit interceptor */
+    const form     = $('#orderForm');
+    const errorEl  = $('#formError');
+    const modal    = $('#successModal');
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+
+      const name  = $('#fullName').value.trim();
+      const email = $('#email').value.trim();
+      const card  = digits($('#cardNumber').value);
+      const exp   = $('#expiry').value;
+      const cvc   = $('#cvc').value;
+
+      const fail = (msg) => {
+        errorEl.textContent = msg;
+        errorEl.classList.remove('hidden');
+        gsap.fromTo(errorEl, { opacity: 0 }, { opacity: 1, duration: .3 });
+      };
+      errorEl.classList.add('hidden');
+
+      if (name.length < 2)                        return fail('Please enter your full name.');
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return fail('Please enter a valid email address.');
+      if (card.length !== 16)                     return fail('Card number must be 16 digits.');
+      if (!/^(0[1-9]|1[0-2])\/\d{2}$/.test(exp))  return fail('Expiry must be in MM/YY format.');
+      if (cvc.length < 3)                         return fail('CVC must be 3–4 digits.');
+
+      $('#successText').innerHTML =
+        `Thank you, <span class="text-white/90 font-medium">${name}</span>. Your Pulse One in ` +
+        `<span class="text-white/90 font-medium">${selectedColor}</span> is reserved. ` +
+        `A confirmation is on its way to <span class="text-white/90 font-medium">${email}</span>.`;
+
+      modal.classList.remove('hidden');
+      requestAnimationFrame(() => { modal.style.opacity = '1'; });
+      gsap.fromTo(modal.firstElementChild,
+        { scale: .92, y: 20 }, { scale: 1, y: 0, duration: .5, ease: 'power3.out' });
+    });
+
+    $('#successClose').addEventListener('click', () => {
+      modal.style.opacity = '0';
+      setTimeout(() => { modal.classList.add('hidden'); form.reset(); }, 400);
+    });
+  };
+
+  /* ----------------------------------------------------------
+     7 · BOOT
+  ---------------------------------------------------------- */
+  const boot = async () => {
+    await loadVideo('video.mp4');
+    video.pause();
+    video.currentTime = 0;
+
+    initScrub();
+    initTracker();
+    initOverlays();
+    initCursor();
+    initCheckout();
+    ScrollTrigger.refresh();
+
+    loader.style.opacity = '0';
+    setTimeout(() => loader.remove(), 650);
+  };
+
+  let resizeTO;
+  window.addEventListener('resize', () => {
+    clearTimeout(resizeTO);
+    resizeTO = setTimeout(() => ScrollTrigger.refresh(), 200);
+  });
+
+  document.readyState === 'loading'
+    ? document.addEventListener('DOMContentLoaded', boot)
+    : boot();
+})();
+</script>
+</body>
+</html>
