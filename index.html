@@ -6,14 +6,11 @@
 <title>PULSE — Sound Redefined</title>
 <meta name="description" content="PULSE premium wireless headphones. Precision engineering, AI-powered noise cancellation. Experience pure audio. $349." />
 
-<!-- Tailwind CSS CDN -->
 <script src="https://cdn.tailwindcss.com"></script>
 
-<!-- GSAP + ScrollTrigger CDN -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
 
-<!-- Inter typeface -->
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
@@ -30,13 +27,7 @@
 </script>
 
 <style>
-  /* ============================================================
-     THEME + WATERMARK-KILL VARIABLES
-     Scaling from center pushes ALL corners off-screen; the extra
-     down-right translate biases the crop so the bottom-right
-     watermark corner is pushed furthest out while the headphones
-     stay perfectly centered.
-  ============================================================ */
+
   :root {
     --wm-scale: 1.18;
     --wm-shift-x: 2%;
@@ -49,7 +40,7 @@
   html, body {
     background: #0d0d0d;
     color: #f5f5f5;
-    overflow-x: hidden;                  /* never allow horizontal scrollbars */
+    overflow-x: hidden;
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
   }
@@ -58,16 +49,13 @@
 
   @media (pointer: fine) { body, a, button, input, label { cursor: none; } }
 
-  /* ============================================================
-     FIXED FULL-SCREEN VIDEO STAGE (watermark clipped by overflow)
-  ============================================================ */
   .video-stage {
     position: fixed;
     top: 0; left: 0;
     width: 100vw;
     height: 100vh;
-    height: 100dvh;                      /* mobile browser chrome safe */
-    overflow: hidden;                    /* clips the over-scaled edges */
+    height: 100dvh;
+    overflow: hidden;
     z-index: 0;
     background: #0d0d0d;
     pointer-events: none;
@@ -75,21 +63,16 @@
   .video-stage video {
     width: 100%;
     height: 100%;
-    object-fit: cover;                   /* center-crop on any aspect */
+    object-fit: cover;
     transform: scale(var(--wm-scale)) translate(var(--wm-shift-x), var(--wm-shift-y));
     transform-origin: center center;
     will-change: transform;
   }
 
-  /* Portrait: object-fit already crops the sides hard, but the bottom
-     edge still touches the viewport — push harder downward so the
-     watermark can never bleed back into view. */
   @media (max-aspect-ratio: 3/4) {
     :root { --wm-scale: 1.26; --wm-shift-x: 3%; --wm-shift-y: 4.5%; }
   }
 
-  /* Insurance layer: soft dark radial welded over the bottom-right
-     corner for extreme viewport ratios. */
   .corner-shield {
     position: fixed; right: 0; bottom: 0;
     width: 34vmin; height: 26vmin;
@@ -105,9 +88,6 @@
       linear-gradient(to bottom, rgba(13,13,13,.35) 0%, transparent 18%, transparent 82%, rgba(13,13,13,.5) 100%);
   }
 
-  /* ============================================================
-     GLASS SURFACES
-  ============================================================ */
   .glass-card {
     background: rgba(255,255,255,.045);
     -webkit-backdrop-filter: blur(22px) saturate(140%);
@@ -135,9 +115,6 @@
   }
   .nav-link:hover { color: #fff; text-shadow: 0 0 12px rgba(255,255,255,.5); }
 
-  /* ============================================================
-     FUTURISTIC VERTICAL PROGRESS DASHBOARD (desktop only)
-  ============================================================ */
   #tracker {
     position: fixed; z-index: 40;
     left: 3rem; top: 50%;
@@ -173,9 +150,6 @@
   .t-stop.active .t-dot  { background: #fff; box-shadow: 0 0 14px rgba(255,255,255,.9); transform: scale(1.45); }
   .t-stop.active .t-text { color: #fff; text-shadow: 0 0 14px rgba(255,255,255,.65); }
 
-  /* ============================================================
-     BUTTONS
-  ============================================================ */
   .btn-glow {
     position: relative; isolation: isolate;
     background: #f5f5f5; color: #0d0d0d;
@@ -203,21 +177,15 @@
     box-shadow: 0 0 20px rgba(255,255,255,.15);
   }
 
-  /* ============================================================
-     BREATHING SCROLL INDICATOR
-  ============================================================ */
   @keyframes breatheDown {
     0%, 100% { transform: translateY(0) scale(1); opacity: .9; }
     50%      { transform: translateY(10px) scale(.92); opacity: .35; }
   }
   .scroll-cue { animation: breatheDown 2.2s cubic-bezier(.45,0,.55,1) infinite; }
 
-  /* ============================================================
-     CUSTOM MAGNETIC CURSOR (fine pointers only)
-  ============================================================ */
   #cursor-dot, #cursor-ring {
     position: fixed; top: 0; left: 0;
-    z-index: 999999;                     /* absolute top — above modal (z-95) & loader (z-100) */
+    z-index: 999999;
     pointer-events: none; border-radius: 9999px;
     mix-blend-mode: difference; display: none;
   }
@@ -225,9 +193,6 @@
   #cursor-ring { width: 38px; height: 38px; border: 1px solid rgba(255,255,255,.65); }
   @media (pointer: fine) { #cursor-dot, #cursor-ring { display: block; } }
 
-  /* ============================================================
-     CHECKOUT / FORM ELEMENTS
-  ============================================================ */
   .field {
     width: 100%;
     background: rgba(255,255,255,.05);
@@ -278,10 +243,8 @@
     transform: translateY(-3px);
   }
 
-  /* Overlay steps hidden until GSAP takes over */
   .overlay-step { opacity: 0; visibility: hidden; }
 
-  /* Loader */
   #loader { transition: opacity .6s ease; }
   @keyframes pulse-ring {
     0% { transform: scale(.85); opacity: .9; }
@@ -290,7 +253,6 @@
   }
   .loader-dot { animation: pulse-ring 1.4s ease-in-out infinite; }
 
-  /* Success modal */
   #successModal { transition: opacity .4s ease; }
 
   @media (prefers-reduced-motion: reduce) {
@@ -301,20 +263,17 @@
 
 <body class="font-sans bg-ink text-neutral-100 selection:bg-white/20">
 
-<!-- LOADER -->
 <div id="loader" class="fixed inset-0 z-[100] bg-[#0d0d0d] flex flex-col items-center justify-center gap-6">
   <div class="loader-dot w-3 h-3 rounded-full bg-white/80"></div>
   <p class="eyebrow">Loading Experience</p>
 </div>
 
-<!-- FIXED VIDEO STAGE — watermark clipped out of view -->
 <div class="video-stage" aria-hidden="true">
   <video id="scrubVideo" src="video.mp4" muted playsinline preload="auto"></video>
 </div>
 <div class="vignette" aria-hidden="true"></div>
 <div class="corner-shield" aria-hidden="true"></div>
 
-<!-- STICKY TRANSLUCENT NAV -->
 <header class="glass-bar fixed top-0 inset-x-0 z-50 flex items-center justify-between px-6 md:px-12 py-4">
   <a href="#" data-goto="0" class="text-sm font-extrabold tracking-[.4em] uppercase">Pulse</a>
   <nav class="hidden lg:flex items-center gap-10" aria-label="Primary">
@@ -328,7 +287,6 @@
   </a>
 </header>
 
-<!-- FUTURISTIC PROGRESS DASHBOARD (desktop only) -->
 <nav id="tracker" class="hidden md:block" aria-label="Section progress">
   <div class="t-rail">
     <div class="t-fill" aria-hidden="true"></div>
@@ -347,12 +305,8 @@
   </div>
 </nav>
 
-<!-- SCROLL TRACK — 4 × 100vh of scrub distance drives the video -->
 <main id="scrollTrack" class="relative z-10" style="height: 400vh;"></main>
 
-<!-- ============ FIXED OVERLAY STEPS (GSAP-driven) ============ -->
-
-<!-- 01 OVERVIEW / HERO -->
 <section id="step-0" class="overlay-step fixed inset-0 z-20 flex flex-col items-center justify-center text-center px-6 pointer-events-none">
   <p class="eyebrow mb-5">Pulse One · Wireless</p>
   <h1 data-ignite class="text-5xl sm:text-7xl md:text-8xl font-extrabold tracking-tight leading-[.95]">
@@ -369,7 +323,6 @@
   </div>
 </section>
 
-<!-- 02 ACOUSTICS — card on the RIGHT -->
 <section id="step-1" class="overlay-step fixed inset-0 z-20 flex items-center justify-center md:justify-end px-6 md:px-20 pointer-events-none">
   <div class="glass-card max-w-sm md:max-w-md p-8 md:p-10">
     <p class="eyebrow mb-4">02 — Acoustics</p>
@@ -381,7 +334,6 @@
   </div>
 </section>
 
-<!-- 03 INTELLIGENCE — card on the LEFT -->
 <section id="step-2" class="overlay-step fixed inset-0 z-20 flex items-center justify-center md:justify-start px-6 md:pl-32 md:pr-20 pointer-events-none">
   <div class="glass-card max-w-sm md:max-w-md p-8 md:p-10">
     <p class="eyebrow mb-4">03 — Intelligence</p>
@@ -393,10 +345,6 @@
   </div>
 </section>
 
-<!-- ==========================================================
-     04 ACQUIRE — FULL CHECKOUT PAGE (normal document flow;
-     solid background slides over the fixed video stage)
-=========================================================== -->
 <section id="checkout" class="relative z-30 bg-coal border-t border-white/5">
   <div class="max-w-6xl mx-auto px-6 md:px-10 lg:pl-24 xl:pl-10 py-24 md:py-32">
 
@@ -408,7 +356,6 @@
 
     <div class="grid lg:grid-cols-2 gap-10 lg:gap-16 items-start">
 
-      <!-- LEFT · SPECS MATRIX -->
       <div>
         <h3 class="text-lg font-semibold tracking-tight mb-6 text-white/85">Engineered without compromise</h3>
         <div class="grid grid-cols-2 gap-4">
@@ -437,11 +384,9 @@
         </ul>
       </div>
 
-      <!-- RIGHT · CHECKOUT CONFIGURATOR -->
       <div class="glass-card p-8 md:p-10">
         <p class="eyebrow mb-6">Pre-Order Configurator</p>
 
-        <!-- Color selection -->
         <div class="mb-8">
           <span class="field-label">Finish — <span id="colorLabel" class="text-white/85 normal-case tracking-normal font-medium">Space Gray</span></span>
           <div class="flex items-center gap-5 mt-3" role="radiogroup" aria-label="Color">
@@ -451,7 +396,6 @@
           </div>
         </div>
 
-        <!-- Order form -->
         <form id="orderForm" novalidate>
           <div class="space-y-5">
             <div>
@@ -504,7 +448,6 @@
   </div>
 </section>
 
-<!-- SUCCESS CONFIRMATION MODAL -->
 <div id="successModal" class="hidden opacity-0 fixed inset-0 z-[95] flex items-center justify-center px-6 bg-black/70 backdrop-blur-md">
   <div class="glass-card max-w-md w-full p-10 text-center">
     <div class="mx-auto mb-6 w-16 h-16 rounded-full border border-white/25 flex items-center justify-center" style="box-shadow: 0 0 40px rgba(255,255,255,.2)">
@@ -521,13 +464,9 @@
   </div>
 </div>
 
-<!-- CUSTOM CURSOR -->
 <div id="cursor-ring" aria-hidden="true"></div>
 <div id="cursor-dot" aria-hidden="true"></div>
 
-<!-- ==========================================================
-     SCRIPT — modular scrollytelling + checkout engine
-=========================================================== -->
 <script>
 (() => {
   'use strict';
@@ -541,9 +480,6 @@
   const loader   = $('#loader');
   const checkout = $('#checkout');
 
-  /* Section map — single source of truth for the video track.
-     enter/exit: slice of the scrub distance. snap: magnetic lock
-     point (the exact frame where components sit perfectly). */
   const SECTIONS = [
     { id: '#step-0', enter: 0.00, exit: 0.30, snap: 0.00 },
     { id: '#step-1', enter: 0.34, exit: 0.62, snap: 0.47 },
@@ -555,17 +491,12 @@
   const IGNITE_ON  = '0 0 24px rgba(255,255,255,.55), 0 0 72px rgba(255,255,255,.22)';
   const IGNITE_OFF = '0 0 0px rgba(255,255,255,0), 0 0 0px rgba(255,255,255,0)';
 
-  /* ----------------------------------------------------------
-     1 · VIDEO PRELOAD — fetch as Blob so every frame is buffered
-         locally; currentTime seeks then resolve instantly, which
-         is what makes the scrub liquid-smooth.
-  ---------------------------------------------------------- */
   const loadVideo = async (src) => {
     try {
       const res = await fetch(src);
       if (!res.ok) throw new Error(res.status);
       video.src = URL.createObjectURL(await res.blob());
-    } catch { /* fall back to streaming src from markup */ }
+    } catch {  }
     await new Promise((resolve) => {
       if (video.readyState >= 2) return resolve();
       video.addEventListener('loadeddata', resolve, { once: true });
@@ -576,16 +507,10 @@
     }
   };
 
-  /* iOS unlock: silent play/pause inside first gesture grants seeking */
   const unlock = () => { video.play().then(() => video.pause()).catch(() => {}); };
   window.addEventListener('touchstart', unlock, { once: true, passive: true });
   window.addEventListener('pointerdown', unlock, { once: true, passive: true });
 
-  /* ----------------------------------------------------------
-     2 · SCRUB ENGINE + MAGNETIC SNAP
-         Master trigger scrubs video.currentTime with luxury
-         damping (scrub: 1.2) and snaps to each section's frame.
-  ---------------------------------------------------------- */
   let masterST = null;
 
   const initScrub = () => {
@@ -600,7 +525,7 @@
         trigger: track,
         start: 'top top',
         end: 'bottom bottom',
-        scrub: 1.2,                          // luxury damping
+        scrub: 1.2,
         invalidateOnRefresh: true,
         snap: {
           snapTo: SNAPS,
@@ -611,7 +536,7 @@
         },
       },
       onUpdate: () => {
-        if (Math.abs(proxy.t - lastT) < 0.02) return;   // skip sub-frame seeks
+        if (Math.abs(proxy.t - lastT) < 0.02) return;
         lastT = proxy.t;
         if (video.readyState >= 2) video.currentTime = proxy.t;
       },
@@ -619,10 +544,6 @@
     masterST = tween.scrollTrigger;
   };
 
-  /* ----------------------------------------------------------
-     3 · PROGRESS DASHBOARD — fill spans the WHOLE page (video
-         track + checkout); milestone 04 activates on checkout.
-  ---------------------------------------------------------- */
   const initTracker = () => {
     const rail    = $('.t-rail');
     const stops   = $$('.t-stop');
@@ -653,7 +574,6 @@
       },
     });
 
-    /* Milestones + nav links glide to their target */
     $$('[data-goto]').forEach((el) => {
       el.addEventListener('click', (e) => {
         e.preventDefault();
@@ -667,10 +587,6 @@
     });
   };
 
-  /* ----------------------------------------------------------
-     4 · OVERLAYS — scrub-linked reveal + neon text ignite,
-         strictly bound to scroll coordinates.
-  ---------------------------------------------------------- */
   const initOverlays = () => {
     SECTIONS.forEach(({ id, enter, exit }) => {
       const node   = $(id);
@@ -697,16 +613,14 @@
         tl.set(node, { opacity: 1, y: 0 });
       }
 
-      tl.to(node, { opacity: 1, duration: 0.3 });                        // hold
+      tl.to(node, { opacity: 1, duration: 0.3 });
       tl.to(ignite, { textShadow: IGNITE_OFF, duration: 0.12, ease: 'power1.out' })
         .to(node, { opacity: 0, y: -40, filter: 'blur(6px)', duration: 0.25, ease: 'power2.in' }, '<');
     });
 
-    /* Hero ignite on load (one-shot) */
     gsap.fromTo('#step-0 [data-ignite]',
       { textShadow: IGNITE_OFF }, { textShadow: IGNITE_ON, duration: 1.6, ease: 'power2.out', delay: .3 });
 
-    /* Checkout headline ignition as it scrolls into view */
     gsap.fromTo('[data-ignite-late]',
       { textShadow: IGNITE_OFF, opacity: 0, y: 40 },
       {
@@ -715,9 +629,6 @@
       });
   };
 
-  /* ----------------------------------------------------------
-     5 · PREMIUM CURSOR SYSTEM (fine pointers only)
-  ---------------------------------------------------------- */
   const initCursor = () => {
     if (!window.matchMedia('(pointer: fine)').matches) return;
 
@@ -749,7 +660,6 @@
       }
     });
 
-    /* Magnetic pull on tagged elements */
     $$('[data-magnetic]').forEach((el) => {
       const pull = 0.3;
       el.addEventListener('mousemove', (e) => {
@@ -766,10 +676,6 @@
     });
   };
 
-  /* ----------------------------------------------------------
-     6 · CHECKOUT — color configurator, input masks, submit
-         interceptor with success confirmation.
-  ---------------------------------------------------------- */
   const initCheckout = () => {
     let selectedColor = 'Space Gray';
     const colorLabel   = $('#colorLabel');
@@ -786,7 +692,6 @@
       });
     });
 
-    /* Input masks */
     const digits = (v) => v.replace(/\D/g, '');
     $('#cardNumber').addEventListener('input', (e) => {
       e.target.value = digits(e.target.value).slice(0, 16).replace(/(.{4})/g, '$1 ').trim();
@@ -799,7 +704,6 @@
       e.target.value = digits(e.target.value).slice(0, 4);
     });
 
-    /* Submit interceptor */
     const form     = $('#orderForm');
     const errorEl  = $('#formError');
     const modal    = $('#successModal');
@@ -843,9 +747,6 @@
     });
   };
 
-  /* ----------------------------------------------------------
-     7 · BOOT
-  ---------------------------------------------------------- */
   const boot = async () => {
     await loadVideo('video.mp4');
     video.pause();
